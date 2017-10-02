@@ -84,5 +84,27 @@ router.post('/process-login', (req, res, next) => {
     customAuthCallback(req, res, next);
 }); // POST /api/process-login
 
+router.delete('/logout', (req, res, next) => {
+    // "req.logout" is defined by Passport
+    req.logout();
+    res.status(200).json({ successMessage: 'Log out success! 🤣' });
+});
+
+router.get('/checklogin', (req, res, next) => {
+    let amILoggedIn = false;
+
+    if (req.user) {
+        req.user.encryptedPassword = undefined;
+        amILoggedIn = true;
+    }
+
+    res.status(200).json(
+      {
+          isLoggedIn: amILoggedIn,
+          userInfo: req.user
+      }
+    );
+});
+
 
 module.exports = router;
