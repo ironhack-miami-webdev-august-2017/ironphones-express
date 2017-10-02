@@ -48,9 +48,19 @@ router.post('/process-signup', (req, res, next) => {
                   return;
               }
 
-              // clear out the password before sending the user info
-              theUser.encryptedPassword = undefined;
-              res.status(200).json(theUser);
+              // "req.login" is a Passport method
+              // (logs in the user automatically)
+              req.login(theUser, (err) => {
+                  if (err) {
+                      console.log('User auto-login error 🚨', err);
+                      res.status(500).json({ errorMessage: 'Error loggin in user.' });
+                      return;
+                  }
+
+                  // clear out the password before sending the user info
+                  theUser.encryptedPassword = undefined;
+                  res.status(200).json(theUser);
+              });
           });
       }
     ); // UserModel.findOne()
