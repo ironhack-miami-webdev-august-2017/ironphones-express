@@ -17,7 +17,12 @@ const phoneSchema = new Schema({
       type: String,
       required: [true, 'Please provide an image URL']
     },
-    specs: [ String ]
+    specs: [ String ],
+    phoner: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    }
 });
 
 const PhoneModel = mongoose.model('Phone', phoneSchema);

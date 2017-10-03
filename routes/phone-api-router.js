@@ -24,11 +24,17 @@ router.get('/phones', (req, res, next) => {
 
 // POST localhost:3000/api/phones
 router.post('/phones', (req, res, next) => {
+    if (!req.user) {
+        res.status(401).json({ errorMessage: 'Not logged in. 🥊' });
+        return;
+    }
+
     const thePhone = new PhoneModel({
         name: req.body.phoneName,
         brand: req.body.phoneBrand,
         image: req.body.phoneImage,
-        specs: req.body.phoneSpecs
+        specs: req.body.phoneSpecs,
+        phoner: req.user._id
     });
 
     thePhone.save((err) => {
@@ -108,18 +114,42 @@ router.put('/phones/:phoneId', (req, res, next) => {
 
 // DELETE localhost:3000/api/phones/ID
 router.delete('/phones/:phoneId', (req, res, next) => {
-    PhoneModel.findByIdAndRemove(
+    if (!req.user) {
+        res.status(401).json({ errorMessage: 'Not logged in. 🥊' });
+        return;
+    }
+
+    PhoneModel.findById(
       req.params.phoneId,
+
       (err, phoneFromDb) => {
           if (err) {
-              console.log('Phone delete ERROR', err);
-              res.status(500).json({ errorMessage: 'Phone delete went wrong 💩' });
+              console.log('Phone owner confirm ERROR', err);
+              res.status(500).json(
+                { errorMessage: 'Phone owner confirm went wrong 💩' }
+              );
               return;
           }
 
-          res.status(200).json(phoneFromDb);
+          if (phoneFromDb.phoner.toString() !== req.user._id.toString()) {
+              res.status(403).json({ errorMessage: 'Phone not yours. 👊🏽' });
+              return;
+          }
+
+          PhoneModel.findByIdAndRemove(
+            req.params.phoneId,
+            (err, phoneFromDb) => {
+                if (err) {
+                    console.log('Phone delete ERROR', err);
+                    res.status(500).json({ errorMessage: 'Phone delete went wrong 💩' });
+                    return;
+                }
+
+                res.status(200).json(phoneFromDb);
+            }
+          ); // PhoneModel.findByIdAndRemove()
       }
-    );
+    ); // PhoneModel.findById()
 }); // DELETE /phones/:phoneId
 
 
