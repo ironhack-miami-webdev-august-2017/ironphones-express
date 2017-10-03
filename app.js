@@ -10,10 +10,12 @@ const cors         = require('cors');
 const passport     = require('passport');
 const session      = require('express-session');
 
+require('dotenv').config();
+
 require('./config/passport-config');
 
 
-mongoose.connect('mongodb://localhost/ironphones-express');
+mongoose.connect(process.env.MONGODB_URI);
 
 const app = express();
 
@@ -51,8 +53,8 @@ app.use(passport.session());
 
 // ROUTES START ------------------------------------------------------
 
-const index = require('./routes/index');
-app.use('/', index);
+// const index = require('./routes/index');
+// app.use('/', index);
 
 const myPhoneRoutes = require('./routes/phone-api-router');
 app.use('/api', myPhoneRoutes);
@@ -61,6 +63,13 @@ const myAuthRoutes = require('./routes/auth-api-router');
 app.use('/api', myAuthRoutes);
 
 // ROUTES end --------------------------------------------------------
+
+
+app.use((req, res, next) => {
+    // if no Express routes match, send the browser the Angular app.
+    res.sendFile(__dirname + '/public/index.html');
+});
+
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
