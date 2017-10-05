@@ -1,9 +1,17 @@
 const express = require('express');
+const multer = require('multer');
 
 const PhoneModel = require('../models/phone-model');
 
 
 const router = express.Router();
+
+const myUploader =
+  multer(
+    {
+      dest: __dirname + '/../public/uploads/'
+    }
+  );
 
 
 // GET localhost:3000/api/phones
@@ -23,38 +31,45 @@ router.get('/phones', (req, res, next) => {
 }); // GET /phones
 
 // POST localhost:3000/api/phones
-router.post('/phones', (req, res, next) => {
-    if (!req.user) {
-        res.status(401).json({ errorMessage: 'Not logged in. 🥊' });
-        return;
-    }
+router.post(
+  '/phones',
+  myUploader.single('phoneImage'),
+  (req, res, next) => {
+      if (!req.user) {
+          res.status(401).json({ errorMessage: 'Not logged in. 🥊' });
+          return;
+      }
 
-    const thePhone = new PhoneModel({
-        name: req.body.phoneName,
-        brand: req.body.phoneBrand,
-        image: req.body.phoneImage,
-        specs: req.body.phoneSpecs,
-        phoner: req.user._id
-    });
+      const thePhone = new PhoneModel({
+          name: req.body.phoneName,
+          brand: req.body.phoneBrand,
+          specs: req.body.phoneSpecs,
+          phoner: req.user._id
+      });
 
-    thePhone.save((err) => {
-        if (thePhone.errors) {
-            res.status(400).json({
-                errorMessage: 'Validation failed 🤢',
-                validationErrors: thePhone.errors
-            });
-            return;
-        }
+      if (req.file) {
+          thePhone.image = '/uploads/' + req.file.filename;
+      }
 
-        if (err) {
-            console.log('Error POSTING phone', err);
-            res.status(500).json({ errorMessage: 'New phone went wrong 💩' });
-            return;
-        }
+      thePhone.save((err) => {
+          if (thePhone.errors) {
+              res.status(400).json({
+                  errorMessage: 'Validation failed 🤢',
+                  validationErrors: thePhone.errors
+              });
+              return;
+          }
 
-        res.status(200).json(thePhone);
-    });
-}); // POST /phones
+          if (err) {
+              console.log('Error POSTING phone', err);
+              res.status(500).json({ errorMessage: 'New phone went wrong 💩' });
+              return;
+          }
+
+          res.status(200).json(thePhone);
+      });
+  }
+); // POST /phones
 
 // GET localhost:3000/api/phones/ID
 router.get('/phones/:phoneId', (req, res, next) => {
