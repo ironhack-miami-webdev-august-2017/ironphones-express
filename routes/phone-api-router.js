@@ -1,17 +1,10 @@
 const express = require('express');
-const multer = require('multer');
 
 const PhoneModel = require('../models/phone-model');
+const m = require('../config/multer-config');
 
 
 const router = express.Router();
-
-const myUploader =
-  multer(
-    {
-      dest: __dirname + '/../public/uploads/'
-    }
-  );
 
 
 // GET localhost:3000/api/phones
@@ -33,7 +26,7 @@ router.get('/phones', (req, res, next) => {
 // POST localhost:3000/api/phones
 router.post(
   '/phones',
-  myUploader.single('phoneImage'),
+  m.uploader.single('phoneImage'),
   (req, res, next) => {
       if (!req.user) {
           res.status(401).json({ errorMessage: 'Not logged in. 🥊' });
@@ -48,7 +41,7 @@ router.post(
       });
 
       if (req.file) {
-          thePhone.image = '/uploads/' + req.file.filename;
+          thePhone.image = m.getUrl(req);
       }
 
       thePhone.save((err) => {
